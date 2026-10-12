@@ -1,0 +1,8 @@
+numpy>=1.26
+scipy>=1.11
+pandas>=2.1
+scikit-learn>=1.4
+matplotlib>=3.8
+scikit-multilearn>=0.2.0
+liac-arff>=2.5
+requests>=2.31
