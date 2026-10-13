@@ -22,6 +22,16 @@ Projekt porównuje dwa podejścia:
 3. Czy zespół łańcuchów (ECC) eliminuje problem kolejności i od ilu łańcuchów zysk przestaje rosnąć?
 4. Czy przewaga CC nad BR rośnie wraz z siłą zależności między etykietami w zbiorze danych?
 
+## Powiązane prace
+
+Kompletne wprowadzenie do uczenia wieloetykietowego, obejmujące podział metod na transformacyjne i adaptacyjne, miary jakości oraz standardowe zbiory danych, zawiera tutorial [1]. Na nim oparte są definicje i metryki używane w projekcie.
+
+Classifier Chains zaproponowali Read i in. jako rozszerzenie Binary Relevance, które uwzględnia zależności między etykietami. Przegląd [2] podsumowuje kilkanaście lat badań nad tą metodą: wyjaśnia, dlaczego łańcuchy działają, jak na wynik wpływają kolejność etykiet i propagacja błędów, oraz omawia warianty, w tym Ensemble of Classifier Chains.
+
+Najszersze dotąd porównanie eksperymentalne metod wieloetykietowych [3] obejmuje 26 metod, 42 zbiory danych i 18 miar jakości, z analizą testem Friedmana i post-hoc Nemenyiego. ECC znalazło się wśród metod rekomendowanych jako punkt odniesienia. Na tej pracy wzorowany jest protokół eksperymentalny projektu. Ci sami autorzy w [4] wiążą wyniki metod z właściwościami zbiorów danych, co jest punktem wyjścia dla pytania badawczego 4.
+
+Niniejszy projekt nie proponuje nowej metody. Skupia się na kontrolowanym porównaniu BR, CC i ECC, aby sprawdzić, w jakich warunkach modelowanie zależności między etykietami faktycznie się opłaca.
+
 ## Metody
 
 ### Implementacja własna
@@ -110,3 +120,9 @@ python analysis/statistics.py
 - matplotlib
 - scikit-multilearn (wczytywanie zbiorów MULAN)
 
+## Literatura
+
+1. E. Gibaja, S. Ventura, *A Tutorial on Multilabel Learning*, ACM Computing Surveys, vol. 47, nr 3, art. 52, 2015. DOI: [10.1145/2716262](https://doi.org/10.1145/2716262)
+2. J. Read, B. Pfahringer, G. Holmes, E. Frank, *Classifier Chains: A Review and Perspectives*, Journal of Artificial Intelligence Research, vol. 70, s. 683–718, 2021. DOI: [10.1613/jair.1.12376](https://doi.org/10.1613/jair.1.12376)
+3. J. Bogatinovski, L. Todorovski, S. Džeroski, D. Kocev, *Comprehensive comparative study of multi-label classification methods*, Expert Systems with Applications, vol. 203, 117215, 2022. DOI: [10.1016/j.eswa.2022.117215](https://doi.org/10.1016/j.eswa.2022.117215) ([arXiv](https://arxiv.org/abs/2102.07113))
+4. J. Bogatinovski, L. Todorovski, S. Džeroski, D. Kocev, *Explaining the performance of multilabel classification methods with data set properties*, International Journal of Intelligent Systems, 2022. DOI: [10.1002/int.22835](https://doi.org/10.1002/int.22835)
