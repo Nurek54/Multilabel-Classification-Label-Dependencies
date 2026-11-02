@@ -2,104 +2,99 @@
 
 Projekt z kursu **Uczenie Maszyn** (Politechnika Wrocławska, studia II stopnia, Informatyka Techniczna).
 Ścieżka: **projekt badawczy**.
+Autorzy: Robert Pytel, Grzegorz Sienkiewicz.
 
 ## Temat
 
 **Klasyfikacja wieloetykietowa: kiedy opłaca się modelować zależności między etykietami?**
 
-W klasyfikacji wieloetykietowej jedna próbka może mieć kilka etykiet jednocześnie (np. utwór muzyczny jest „spokojny” i „smutny”, zdjęcie zawiera „plażę” i „zachód słońca”). Etykiety często są ze sobą powiązane, a pytanie brzmi, czy jawne uwzględnienie tych zależności poprawia jakość klasyfikacji.
-
-Projekt porównuje dwa podejścia:
-
-- **Binary Relevance (BR):** osobny klasyfikator binarny dla każdej etykiety. Proste i szybkie, ale ignoruje zależności między etykietami.
-- **Classifier Chains (CC):** klasyfikatory ustawione w łańcuch. Klasyfikator dla etykiety *k* dostaje cechy oraz etykiety 1, ..., *k-1*, dzięki czemu uczy się zależności między nimi. Wadą jest wrażliwość na kolejność łańcucha i propagacja błędów.
-- **Ensemble of Classifier Chains (ECC):** kilka łańcuchów o losowej kolejności z uśrednionymi predykcjami, jako sposób na ograniczenie wpływu kolejności.
-
-## Pytania badawcze
-
-1. Czy Classifier Chains osiąga statystycznie lepsze wyniki niż Binary Relevance?
-2. Jak bardzo wynik Classifier Chains zależy od kolejności etykiet w łańcuchu?
-3. Czy zespół łańcuchów (ECC) eliminuje problem kolejności i od ilu łańcuchów zysk przestaje rosnąć?
-4. Czy przewaga CC nad BR rośnie wraz z siłą zależności między etykietami w zbiorze danych?
-
-## Powiązane prace
-
-Kompletne wprowadzenie do uczenia wieloetykietowego, obejmujące podział metod na transformacyjne i adaptacyjne, miary jakości oraz standardowe zbiory danych, zawiera tutorial [1]. Na nim oparte są definicje i metryki używane w projekcie.
-
-Classifier Chains zaproponowali Read i in. jako rozszerzenie Binary Relevance, które uwzględnia zależności między etykietami. Przegląd [2] podsumowuje kilkanaście lat badań nad tą metodą: wyjaśnia, dlaczego łańcuchy działają, jak na wynik wpływają kolejność etykiet i propagacja błędów, oraz omawia warianty, w tym Ensemble of Classifier Chains.
-
-Najszersze dotąd porównanie eksperymentalne metod wieloetykietowych [3] obejmuje 26 metod, 42 zbiory danych i 18 miar jakości, z analizą testem Friedmana i post-hoc Nemenyiego. ECC znalazło się wśród metod rekomendowanych jako punkt odniesienia. Na tej pracy wzorowany jest protokół eksperymentalny projektu. Ci sami autorzy w [4] wiążą wyniki metod z właściwościami zbiorów danych, co jest punktem wyjścia dla pytania badawczego 4.
-
-Niniejszy projekt nie proponuje nowej metody. Skupia się na kontrolowanym porównaniu BR, CC i ECC, aby sprawdzić, w jakich warunkach modelowanie zależności między etykietami faktycznie się opłaca.
+W klasyfikacji wieloetykietowej jedna próbka może mieć kilka etykiet jednocześnie (np. zdjęcie zawiera „plażę”, „morze” i „zachód słońca”). Etykiety często są ze sobą powiązane, a pytanie brzmi, czy jawne uwzględnienie tych zależności poprawia jakość klasyfikacji.
 
 ## Metody
 
-### Implementacja własna
+### Metody bazowe (zaimplementowane)
 
-Metody zaimplementowane od podstaw (Python + numpy), zgodnie z API scikit-learn (`BaseEstimator`, `ClassifierMixin`, `fit`, `predict`, `predict_proba`):
+- **Binary Relevance (BR):** osobny klasyfikator binarny dla każdej etykiety. Proste i szybkie, ale ignoruje zależności między etykietami.
+- **Classifier Chains (CC):** klasyfikatory ustawione w łańcuch. Klasyfikator dla etykiety *k* dostaje cechy oraz etykiety 1, ..., *k-1*, dzięki czemu uczy się zależności między nimi.
+- **Ensemble of Classifier Chains (ECC):** kilka łańcuchów o losowej kolejności z uśrednionymi prawdopodobieństwami.
 
-- `BinaryRelevance`
-- `ClassifierChain` (losowa lub zadana kolejność etykiet)
-- `EnsembleClassifierChains`
+### Metoda z literatury (do wyboru przez prowadzącego)
 
-### Metody referencyjne
+Metody bazowe zostaną uzupełnione o jedną metodę neuronową z literatury, niedostępną w gotowych bibliotekach:
 
-- `MultiOutputClassifier` (scikit-learn), odpowiednik BR
-- `ClassifierChain` (scikit-learn)
+- **Propozycja A: Classifier Chain Networks (CCN) [1], 2025.** Łańcuch klasyfikatorów uczony jak sieć neuronowa. Każda etykieta dostaje cechy próbki oraz prawdopodobieństwa wcześniejszych etykiet, a wszystkie etykiety uczą się naraz z jedną funkcją straty. Siłę zależności między etykietami opisują wyuczone wagi. **Modyfikacja:** warstwy ukryte (Deep CCN).
+- **Propozycja B: CLIF [2], 2022.** Z danych treningowych budowany jest graf współwystępowania etykiet. Sieć grafowa (GIN) uczy się na nim reprezentacji etykiet, które następnie wybierają z cech próbki cechy ważne dla danej etykiety. **Modyfikacja:** inny sposób budowania grafu, np. z korelacji uwzględniającej wykluczanie się etykiet.
 
-### Klasyfikatory bazowe
+Wszystkie metody implementujemy samodzielnie (numpy / PyTorch), zgodnie z API scikit-learn.
 
-- Regresja logistyczna
-- Drzewo decyzyjne
-- k-NN
+## Pytania badawcze
 
-## Dane
+1. Jak wybór klasyfikatora bazowego wpływa na jakość klasyfikacji?
+2. Jak kolejność przetwarzania etykiet w łańcuchu wpływa na jakość klasyfikacji?
+3. Jak liczba łańcuchów w metodzie Ensemble of Classifier Chains wpływa na wyniki klasyfikacji?
+4. W zależności od wybranej metody z literatury:
+    - **CCN:** ile wnoszą połączenia między etykietami i czy warstwy ukryte (Deep CCN) poprawiają jakość klasyfikacji?
+    - **CLIF:** ile wnosi graf etykiet (porównanie z wariantem bez informacji o etykietach) i czy alternatywna konstrukcja grafu poprawia jakość klasyfikacji?
 
-Standardowe zbiory wieloetykietowe z repozytorium MULAN / OpenML, m.in.:
+## Zbiory danych
 
-| Zbiór | Dziedzina |
+Standardowe zbiory wieloetykietowe z repozytorium [MULAN](https://mulan.sourceforge.net/datasets-mlc.html):
+
+| Zbiór | Dziedzina | Przykłady | Cechy | Etykiety |
+|---|---|---|---|---|
+| emotions | muzyka | 593 | 72 | 6 |
+| scene | obrazy | 2407 | 294 | 6 |
+| yeast | biologia | 2417 | 103 | 14 |
+| birds | dźwięk | 645 | 260 | 19 |
+| medical | tekst medyczny | 978 | 1449 | 45 |
+| enron | tekst (e-maile) | 1702 | 1001 | 53 |
+
+## Stan implementacji
+
+| Element | Status |
 |---|---|
-| emotions | muzyka |
-| scene | obrazy |
-| yeast | biologia |
-| birds | dźwięk |
-| medical | tekst |
-| enron | tekst |
-
-## Protokół eksperymentalny
-
-- Walidacja: 5x2 CV (lub powtarzana 5-krotna walidacja krzyżowa)
-- Metryki główne: **Hamming loss**, **macro F1**
-- Metryki dodatkowe: subset accuracy, micro F1
-- Analiza statystyczna:
-  - test Wilcoxona (porównania parowe),
-  - test Friedmana z testem post-hoc Nemenyiego (ranking globalny, diagram różnic krytycznych)
-- Stały `random_state` dla powtarzalności wyników
-
-## Eksperymenty
-
-| ID | Eksperyment | Co jest badane |
-|---|---|---|
-| E0 | Porównanie bazowe | Implementacja własna vs scikit-learn, BR vs CC na wszystkich zbiorach |
-| E1 | Kolejność łańcucha | Rozrzut wyników CC dla 20 losowych kolejności etykiet |
-| E2 | Ensemble of Classifier Chains | Liczba łańcuchów: 1, 5, 10, 20 |
-| E3 | Kolejność przemyślana | Sortowanie etykiet wg częstości lub korelacji vs kolejność losowa |
-| E4 | Ablacja uczenia łańcucha | Prawdziwe etykiety vs predykcje poprzednich klasyfikatorów jako cechy |
-| E5 | Zależności etykiet | Związek między siłą korelacji etykiet w zbiorze a zyskiem CC względem BR |
+| Binary Relevance | ✔ gotowe, predykcje identyczne z `MultiOutputClassifier` |
+| Classifier Chains | ✔ gotowe, predykcje identyczne z `ClassifierChain` ze sklearn |
+| Ensemble of Classifier Chains | ✔ gotowe |
+| Metoda z literatury (CCN / CLIF) | ⏳ czeka na decyzję prowadzącego |
+| Wczytywanie zbiorów MULAN | ⏳ do zrobienia |
+| Eksperymenty i analiza statystyczna | ⏳ do zrobienia |
 
 ## Struktura repozytorium
 
 ```
 Multilabel-Classification-Label-Dependencies/
-├── methods/          # implementacje BR, CC, ECC
-├── experiments/      # osobny skrypt dla każdego eksperymentu
-├── analysis/         # testy statystyczne, tabele, wykresy
-├── data/             # zbiory danych
-├── results/          # surowe wyniki (.npy / .csv)
-├── figures/          # wygenerowane wykresy
+├── main.py                              # demo: BR, CC, ECC z 3 klasyfikatorami bazowymi
+├── methods/
+│   ├── __init__.py
+│   ├── _utils.py                        # klasyfikator domyślny, obsługa etykiet z jedną klasą
+│   ├── binary_relevance.py              # BinaryRelevance
+│   ├── classifier_chain.py              # ClassifierChain
+│   └── ensemble_classifier_chains.py    # EnsembleClassifierChains
+├── experiments/
+│   └── sanity_check.py                  # porównanie własnych implementacji ze sklearn
 ├── requirements.txt
 └── README.md
 ```
+
+## Użycie
+
+Każda metoda dziedziczy po `BaseEstimator` i `ClassifierMixin` i ma metody `fit(X, Y)`, `predict(X)` oraz `predict_proba(X)`. `Y` to macierz 0/1 o wymiarze (liczba próbek × liczba etykiet).
+
+```python
+from sklearn.tree import DecisionTreeClassifier
+from methods import BinaryRelevance, ClassifierChain, EnsembleClassifierChains
+
+br = BinaryRelevance(base_estimator=DecisionTreeClassifier())
+cc = ClassifierChain(base_estimator=DecisionTreeClassifier(), order="random", random_state=0)
+ecc = EnsembleClassifierChains(base_estimator=DecisionTreeClassifier(), n_chains=10, random_state=0)
+
+Y_pred = ecc.fit(X_train, Y_train).predict(X_test)
+```
+
+- `base_estimator`: dowolny klasyfikator binarny ze sklearn (domyślnie regresja logistyczna).
+- `order` (CC): `None` (kolejność 0, 1, ..., L-1), `"random"` albo lista indeksów etykiet.
+- `n_chains` (ECC): liczba łańcuchów.
 
 ## Uruchomienie
 
@@ -108,21 +103,41 @@ python -m venv .venv
 .venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 
-python experiments/e0_baseline.py
-python analysis/statistics.py
+python main.py                          # demo na danych syntetycznych
+python -m experiments.sanity_check      # porównanie ze sklearn
 ```
 
-## Wymagania
+## TODO
 
-- Python 3.10+
-- numpy, scipy, pandas
-- scikit-learn
-- matplotlib
-- scikit-multilearn (wczytywanie zbiorów MULAN)
+**Metoda z literatury**
+- [ ] Zaimplementować wybraną metodę w PyTorch, zgodnie z API scikit-learn
+- [ ] Zaimplementować modyfikację (Deep CCN albo alternatywny graf etykiet)
+- [ ] Dodać `torch` do `requirements.txt`
 
-## Literatura
+**Dane**
+- [ ] Wczytywanie zbiorów MULAN (np. `skmultilearn.dataset.load_dataset`)
+- [ ] Podział danych ze stratyfikacją iteracyjną (`IterativeStratification`)
 
-1. E. Gibaja, S. Ventura, *A Tutorial on Multilabel Learning*, ACM Computing Surveys, vol. 47, nr 3, art. 52, 2015. DOI: [10.1145/2716262](https://doi.org/10.1145/2716262)
-2. J. Read, B. Pfahringer, G. Holmes, E. Frank, *Classifier Chains: A Review and Perspectives*, Journal of Artificial Intelligence Research, vol. 70, s. 683–718, 2021. DOI: [10.1613/jair.1.12376](https://doi.org/10.1613/jair.1.12376)
-3. J. Bogatinovski, L. Todorovski, S. Džeroski, D. Kocev, *Comprehensive comparative study of multi-label classification methods*, Expert Systems with Applications, vol. 203, 117215, 2022. DOI: [10.1016/j.eswa.2022.117215](https://doi.org/10.1016/j.eswa.2022.117215) ([arXiv](https://arxiv.org/abs/2102.07113))
-4. J. Bogatinovski, L. Todorovski, S. Džeroski, D. Kocev, *Explaining the performance of multilabel classification methods with data set properties*, International Journal of Intelligent Systems, 2022. DOI: [10.1002/int.22835](https://doi.org/10.1002/int.22835)
+**Eksperymenty (osobny skrypt dla każdego)**
+- [ ] Plan eksperymentu: protokół (np. 5x2 CV), metryki (Hamming loss, subset accuracy, macro F1), parametry
+- [ ] E1: wpływ klasyfikatora bazowego (regresja logistyczna, drzewo, kNN)
+- [ ] E2: wpływ kolejności etykiet w łańcuchu
+- [ ] E3: wpływ liczby łańcuchów w ECC
+- [ ] E4: ablacja metody z literatury
+- [ ] Zapis surowych wyników do `results/` (.npy / .csv)
+
+**Analiza i raport**
+- [ ] Testy statystyczne: Wilcoxon (parami), Friedman + Nemenyi (ranking globalny)
+- [ ] Tabele i wykresy (matplotlib), diagram różnic krytycznych
+- [ ] Raport w szablonie Springer LNCS lub IEEE
+- [ ] Deklaracja użycia narzędzi AI w raporcie
+
+**Opcjonalnie**
+- [ ] Bootstrap w ECC (jak w oryginalnym artykule Read i in.)
+
+## Bibliografia
+
+1. D. J. W. Touw, M. Van de Velden, *Classifier chain networks for multi-label classification*, Expert Systems with Applications, vol. 286, art. 128048, 2025. DOI: [10.1016/j.eswa.2025.128048](https://doi.org/10.1016/j.eswa.2025.128048)
+2. J.-Y. Hang, M.-L. Zhang, *Collaborative learning of label semantics and deep label-specific features for multi-label classification*, IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 44, no. 12, s. 9860–9871, 2022. DOI: [10.1109/TPAMI.2021.3136592](https://doi.org/10.1109/TPAMI.2021.3136592)
+3. W. Liu, H. Wang, X. Shen, I. W. Tsang, *The emerging trends of multi-label learning*, IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 44, no. 11, s. 7955–7974, 2022. DOI: [10.1109/TPAMI.2021.3119334](https://doi.org/10.1109/TPAMI.2021.3119334)
+4. J. Bogatinovski, L. Todorovski, S. Džeroski, D. Kocev, *Comprehensive comparative study of multi-label classification methods*, Expert Systems with Applications, vol. 203, art. 117215, 2022. DOI: [10.1016/j.eswa.2022.117215](https://doi.org/10.1016/j.eswa.2022.117215)
