@@ -32,6 +32,10 @@ def generate_splits(X, Y, n_repeats=5, n_splits=5, val_fraction=0.2):
 
     return splits
 
+def load_splits(name):
+    with open(f"experiments/dataset_splits/{name}.pkl", "rb") as f:
+        return pickle.load(f)
+
 def main():    
     os.makedirs("experiments/dataset_splits", exist_ok=True)
 
